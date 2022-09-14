@@ -1,4 +1,3 @@
-from cgitb import html
 from os import PathLike
 from pathlib import Path
 import requests

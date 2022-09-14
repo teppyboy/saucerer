@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup, element
 
 
-class SauceUserInfo:
+class SauceUser:
     def __init__(self, name: str, url: str):
         self._name = name
         self._url = url
@@ -15,14 +15,14 @@ class SauceUserInfo:
         return self._url
 
 
-class SauceInfo:
+class Sauce:
     def __init__(
         self, name: str, url: str, sauce_id: int, user_name: str, user_url: str
     ):
         self._name = name
         self._url = url
         self._id = sauce_id
-        self._user = SauceUserInfo(user_name, user_url)
+        self._user = SauceUser(user_name, user_url)
 
     @property
     def name(self) -> str:
@@ -37,7 +37,7 @@ class SauceInfo:
         return self._id
 
     @property
-    def user(self) -> SauceUserInfo:
+    def user(self) -> SauceUser:
         return self._user
 
 
@@ -56,7 +56,7 @@ class SearchResult:
         self._image_url = image_url
         self._hidden = hidden
         self._match_percentage = match_percentage
-        self._sauce = SauceInfo(image_title, sauce_url, sauce_id, user_name, user_url)
+        self._sauce = Sauce(image_title, sauce_url, sauce_id, user_name, user_url)
 
     @property
     def hidden(self) -> bool:
@@ -71,7 +71,7 @@ class SearchResult:
         return self._match_percentage
 
     @property
-    def sauce(self) -> SauceInfo:
+    def sauce(self) -> Sauce:
         return self._sauce
 
     @staticmethod
