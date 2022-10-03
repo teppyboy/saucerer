@@ -38,6 +38,8 @@ class Saucerer:
     ) -> list[SearchResult]:
         if not file and not image_url:
             raise ValueError("At least a file or an url is required")
+        if file and image_url:
+            raise ValueError("Only a file or an image url can be specified at once")
         file_name = None
         file_bytes = None
         if file:
