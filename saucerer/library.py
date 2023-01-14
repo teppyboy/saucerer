@@ -1,23 +1,49 @@
+import aiohttp
+import io
+from aiohttp.client_exceptions import ClientError
+from urllib.parse import urlparse
 from os import PathLike
 from pathlib import Path
-import requests
-from saucerer.constants import *
-from saucerer.classes import SearchResult
+from .constants import *
+from .classes import SearchResult
+from .exceptions import *
 from bs4 import BeautifulSoup, element
+
+
+def _validate_url(url: str) -> bool:
+    result = urlparse(url=url)
+    return all([result.scheme, result.netloc])
 
 
 class Saucerer:
     def __init__(self):
-        self._session = requests.Session()
+        self._session: aiohttp.ClientSession = None
+
+    async def __aenter__(self):
+        await self.init()
+        return self
+
+    async def __aexit__(self, exc_t, exc_v, exc_tb):
+        await self.close()
+
+    async def init(self):
+        if self._session:
+            return
+        self._session = aiohttp.ClientSession()
         self._session.headers.update(HEADERS)
 
-    def _search_parse(self, search: str):
+    async def close(self):
+        if not self._session:
+            return
+        await self._session.close()
+
+    def _parse(self, search: str, hidden: bool = True) -> list[SearchResult]:
         html = BeautifulSoup(search, "html.parser")
         results = []
         for result in html.find(id="mainarea").find(id="middle").children:
-            if not isinstance(result, element.Tag):
-                continue
             if result is None:
+                continue
+            if not isinstance(result, element.Tag):
                 continue
             if (
                 result.get("id") == "result-hidden-notification"
@@ -25,35 +51,40 @@ class Saucerer:
             ):
                 continue
             image_sauce = SearchResult.from_html(result)
-            if not image_sauce:
+            if not image_sauce or (image_sauce.hidden and not hidden):
                 continue
             results.append(image_sauce)
         return results
 
-    def search(
+    async def search(
         self,
-        file: PathLike | str = None,
-        image_url: str = None,
+        image: PathLike | str | io.BufferedIOBase | io.TextIOBase | io.BytesIO,
         databases: list[int] = None,
+        hidden: bool = True,
     ) -> list[SearchResult]:
-        if not file and not image_url:
-            raise ValueError("At least a file or an url is required")
-        if file and image_url:
-            raise ValueError("Only a file or an image url can be specified at once")
-        file_name = None
-        file_bytes = None
-        if file:
-            file = Path(file)
-            file_name = file.name
-            file_bytes = file.read_bytes()
-        files_params = {"file": (file_name, file_bytes)}
-        if image_url:
-            files_params.update({"url": (None, image_url)})
+        params = {}
+        await self.init()
+        if isinstance(image, io.BufferedIOBase):
+            params.update({"file": image.read()})
+        elif isinstance(image, io.TextIOBase):
+            params.update({"url": image.read(), "file": None})
+        elif _validate_url(image):
+            params.update({"url": image, "file": None})
+        else:
+            file = Path(image)
+            params.update({"file": file.read_bytes()})
+
         if databases:
             for db in databases:
-                files_params.update({"dbs[]", (None, db)})
-        rsp = self._session.post(
-            "https://saucenao.com/search.php",
-            files=files_params,
-        )
-        return self._search_parse(rsp.text)
+                params.update({"dbs[]", (None, db)})
+        try:
+            rsp = await self._session.post(
+                "https://saucenao.com/search.php",
+                data=params,
+            )
+        except ClientError as e:
+            raise UploadError(e)
+        try:
+            return self._parse(await rsp.text(), hidden=hidden)
+        except Exception as e:
+            raise ParseError(e)
