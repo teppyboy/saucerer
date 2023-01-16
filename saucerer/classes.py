@@ -131,3 +131,7 @@ class Sauce:
             "misc_info": [x.as_dict() for x in self._misc_info],
             "illust": self._illust.as_dict()
         }
+
+class SearchResult:
+    def __init__(self, sauces: list[Sauce]):
+        self._sauces = sauces

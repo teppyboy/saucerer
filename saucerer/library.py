@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from os import PathLike, getenv
 from pathlib import Path
 from .constants import *
-from .classes import MiscInfo, Sauce
+from .classes import MiscInfo, Sauce, SearchResult
 from .exceptions import *
 from bs4 import BeautifulSoup, element
 
@@ -55,7 +55,7 @@ class Saucerer:
             return obj.get_text()
         return obj.decode_contents()
 
-    def _parse_body(self, html: BeautifulSoup) -> Sauce:
+    def _parse_sauce(self, html: BeautifulSoup) -> Sauce:
         # Sauce variables
         source_url = None
         source_id = None
@@ -136,9 +136,9 @@ class Saucerer:
             misc_info=misc_info,
         )
 
-    def _parse(self, search: str, hidden: bool = True) -> list[Sauce]:
+    def _parse(self, search: str, hidden: bool = True) -> SearchResult:
         html = BeautifulSoup(search, "html.parser")
-        results = []
+        sauces = []
         for result in html.find(id="mainarea").find(id="middle").children:
             if result is None:
                 continue
@@ -152,15 +152,15 @@ class Saucerer:
             image_sauce = self._parse_body(result)
             if not image_sauce or (image_sauce.hidden and not hidden):
                 continue
-            results.append(image_sauce)
-        return results
+            sauces.append(image_sauce)
+        return SearchResult(sauces=sauces)
 
     async def search(
         self,
         image: PathLike | str | io.BufferedIOBase | io.TextIOBase | io.BytesIO,
         databases: list[int] = None,
         hidden: bool = True,
-    ) -> list[Sauce]:
+    ) -> SearchResult:
         params = {}
         await self.init()
         if isinstance(image, io.BufferedIOBase):
