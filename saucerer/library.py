@@ -149,7 +149,7 @@ class Saucerer:
                 or result.get("id") == "smalllogo"
             ):
                 continue
-            image_sauce = self._parse_body(result)
+            image_sauce = self._parse_sauce(result)
             if not image_sauce or (image_sauce.hidden and not hidden):
                 continue
             sauces.append(image_sauce)
