@@ -135,3 +135,12 @@ class Sauce:
 class SearchResult:
     def __init__(self, sauces: list[Sauce]):
         self._sauces = sauces
+
+    @property
+    def sauces(self) -> list[Sauce]:
+        return self._sauces
+
+    def as_dict(self) -> dict:
+        return {
+            "sauces": [x.as_dict() for x in self._sauces]
+        }
