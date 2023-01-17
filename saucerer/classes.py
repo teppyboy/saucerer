@@ -58,7 +58,7 @@ class MiscInfo:
 
     @property
     def provider(self) -> bool:
-        return self._hidden
+        return self._provider
 
     @property
     def url(self) -> str:
