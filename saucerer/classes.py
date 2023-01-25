@@ -42,6 +42,10 @@ class Illustration:
     @property
     def author(self) -> Author:
         return self._author
+    
+    @property
+    def artist(self) -> Author:
+        return self._author
 
     def as_dict(self) -> dict:
         return {
@@ -132,15 +136,46 @@ class Sauce:
             "illust": self._illust.as_dict()
         }
 
+class RetryLink:
+    def __init__(self, title: str, url: str):
+        self._title = title
+        self._url = url
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def url(self) -> str:
+        return self._url
+
+    def as_dict(self) -> dict:
+        return {
+            "title": self._title,
+            "url": self._url
+        }
+
 class SearchResult:
-    def __init__(self, sauces: list[Sauce]):
+    def __init__(self, sauces: list[Sauce], retry_links: list[RetryLink], my_image_url: str):
         self._sauces = sauces
+        self._retry_links = retry_links
+        self._my_image_url = my_image_url
 
     @property
     def sauces(self) -> list[Sauce]:
         return self._sauces
 
+    @property
+    def retry_links(self) -> list[RetryLink]:
+        return self._retry_links
+
+    @property
+    def my_image_url(self) -> str:
+        return self._my_image_url
+
     def as_dict(self) -> dict:
         return {
-            "sauces": [x.as_dict() for x in self._sauces]
+            "sauces": [x.as_dict() for x in self._sauces],
+            "retry_links": [x.as_dict() for x in self._retry_links],
+            "my_image_url": self._my_image_url
         }

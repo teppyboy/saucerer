@@ -14,3 +14,9 @@ class ParseError(SaucererError):
     """Base class for all web parsing error"""
 
     pass
+
+
+class SauceNAOError(SaucererError):
+    """Error raised by server"""
+
+    pass

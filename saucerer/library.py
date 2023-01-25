@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from os import PathLike, getenv
 from pathlib import Path
 from .constants import *
-from .classes import MiscInfo, Sauce, SearchResult
+from .classes import MiscInfo, RetryLink, Sauce, SearchResult
 from .exceptions import *
 from bs4 import BeautifulSoup, element
 
@@ -139,6 +139,10 @@ class Saucerer:
     def _parse(self, search: str, hidden: bool = True) -> SearchResult:
         html = BeautifulSoup(search, "html.parser")
         sauces = []
+        if self._decode(html.find("title")) == "SauceNAO Error":
+            raise SauceNAOError(html.find("body").text)
+        my_image_url: str = "https://saucenao.com" + self._get(html.find(id="yourimage", recursive=True).contents[0].contents[0], "src")
+        retry_links = []
         for result in html.find(id="mainarea").find(id="middle").children:
             if result is None:
                 continue
@@ -153,7 +157,17 @@ class Saucerer:
             if not image_sauce or (image_sauce.hidden and not hidden):
                 continue
             sauces.append(image_sauce)
-        return SearchResult(sauces=sauces)
+        for result in html.find(id="yourimageretrylinks", recursive=True).children:
+            if result is None:
+                continue
+            if not isinstance(result, element.Tag):
+                continue
+            if result.name != "a":
+                continue
+            url = self._get(result, "href")
+            title = self._get(result.contents[0], "title").removeprefix("Search ")
+            retry_links.append(RetryLink(title=title, url=url))
+        return SearchResult(sauces=sauces, retry_links=retry_links, my_image_url=my_image_url)
 
     async def search(
         self,
@@ -185,5 +199,7 @@ class Saucerer:
             raise UploadError(e)
         try:
             return self._parse(await rsp.text(), hidden=hidden)
+        except SauceNAOError as e:
+            raise
         except Exception as e:
             raise ParseError(e)
