@@ -1,4 +1,10 @@
 class Author:
+    """An author information
+
+    Attributes:
+        name: A string containing the author name
+        url: A string containing the author url in the sauce website
+    """
     def __init__(self, name: str, url: str):
         self._name = name
         self._url = url
@@ -12,6 +18,7 @@ class Author:
         return self._url
 
     def as_dict(self) -> dict:
+        """Convert the current class to a dict"""
         return {
             "name": self._name,
             "url": self._url,
@@ -19,6 +26,15 @@ class Author:
 
 
 class Illustration:
+    """An illustration information
+
+    Attributes:
+        name: A string containing the illust name
+        url: A string containing the url to the illust
+        id: A string or an integer containing the illust id in the sauce website 
+        author: An `Author` class containing the author information
+        artist: Alias for `author`
+    """
     def __init__(
         self, name: str, url: str, sauce_id: int | str, user_name: str, user_url: str
     ):
@@ -42,20 +58,28 @@ class Illustration:
     @property
     def author(self) -> Author:
         return self._author
-    
+
     @property
     def artist(self) -> Author:
         return self._author
 
     def as_dict(self) -> dict:
+        """Convert the current class to a dict"""
         return {
             "name": self._name,
             "url": self._url,
             "id": self._id,
-            "author": self._author.as_dict()
+            "author": self._author.as_dict(),
         }
 
+
 class MiscInfo:
+    """A miscellaneous information (usually alternative url to the image)
+
+    Attributes:
+        provider: A string containing the image provider
+        url: A string containing the url to the image
+    """
     def __init__(self, provider: str, url: str) -> None:
         self._provider = provider
         self._url = url
@@ -69,12 +93,16 @@ class MiscInfo:
         return self._url
 
     def as_dict(self) -> dict:
-        return {
-            "provider": self._provider,
-            "url": self._url
-        }
+        """Convert the current class to a dict"""
+        return {"provider": self._provider, "url": self._url}
+
 
 class Sauce:
+    """A sauce
+
+    Attributes:
+        TODO
+    """
     def __init__(
         self,
         hidden: bool,
@@ -94,7 +122,9 @@ class Sauce:
         self._match_percentage = match_percentage
         self._material = material
         self._characters = characters
-        self._illust = Illustration(image_title, sauce_url, sauce_id, user_name, user_url)
+        self._illust = Illustration(
+            image_title, sauce_url, sauce_id, user_name, user_url
+        )
         self._misc_info = misc_info
 
     @property
@@ -126,6 +156,7 @@ class Sauce:
         return self._misc_info
 
     def as_dict(self) -> dict:
+        """Convert the current class to a dict"""
         return {
             "hidden": self._hidden,
             "image_url": self._image_url,
@@ -133,10 +164,17 @@ class Sauce:
             "material": self._material,
             "characters": self._characters,
             "misc_info": [x.as_dict() for x in self._misc_info],
-            "illust": self._illust.as_dict()
+            "illust": self._illust.as_dict(),
         }
 
+
 class RetryLink:
+    """A retry link
+
+    Attributes:
+        title: A string containing the search provider
+        url: A string containing the url to the image search result
+    """
     def __init__(self, title: str, url: str):
         self._title = title
         self._url = url
@@ -150,13 +188,14 @@ class RetryLink:
         return self._url
 
     def as_dict(self) -> dict:
-        return {
-            "title": self._title,
-            "url": self._url
-        }
+        """Convert the current class to a dict"""
+        return {"title": self._title, "url": self._url}
+
 
 class SearchResult:
-    def __init__(self, sauces: list[Sauce], retry_links: list[RetryLink], my_image_url: str):
+    def __init__(
+        self, sauces: list[Sauce], retry_links: list[RetryLink], my_image_url: str
+    ):
         self._sauces = sauces
         self._retry_links = retry_links
         self._my_image_url = my_image_url
@@ -174,8 +213,9 @@ class SearchResult:
         return self._my_image_url
 
     def as_dict(self) -> dict:
+        """Convert the current class to a dict"""
         return {
             "sauces": [x.as_dict() for x in self._sauces],
             "retry_links": [x.as_dict() for x in self._retry_links],
-            "my_image_url": self._my_image_url
+            "my_image_url": self._my_image_url,
         }

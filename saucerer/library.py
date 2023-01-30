@@ -106,11 +106,7 @@ class Saucerer:
                 image_title = self._decode(prev)
         match_info = html.find(class_="resultmatchinfo")
         match_percentage = (
-            float(
-                self._decode(match_info.find(
-                    class_="resultsimilarityinfo"
-                ))[:-1]
-            )
+            float(self._decode(match_info.find(class_="resultsimilarityinfo"))[:-1])
             / 100
         )
         misc_info = []
@@ -121,7 +117,7 @@ class Saucerer:
             url = element.get("href")
             provider = element.contents[0].get("src").split("/")[-1][:-4]
             misc_info.append(MiscInfo(provider=provider, url=url))
-            
+
         return Sauce(
             image_url=image_url,
             hidden=hidden,
@@ -141,7 +137,9 @@ class Saucerer:
         sauces = []
         if self._decode(html.find("title")) == "SauceNAO Error":
             raise SauceNAOError(html.find("body").text)
-        my_image_url: str = "https://saucenao.com" + self._get(html.find(id="yourimage", recursive=True).contents[0].contents[0], "src")
+        my_image_url: str = "https://saucenao.com" + self._get(
+            html.find(id="yourimage", recursive=True).contents[0].contents[0], "src"
+        )
         retry_links = []
         for result in html.find(id="mainarea").find(id="middle").children:
             if result is None:
@@ -167,7 +165,9 @@ class Saucerer:
             url = self._get(result, "href")
             title = self._get(result.contents[0], "title").removeprefix("Search ")
             retry_links.append(RetryLink(title=title, url=url))
-        return SearchResult(sauces=sauces, retry_links=retry_links, my_image_url=my_image_url)
+        return SearchResult(
+            sauces=sauces, retry_links=retry_links, my_image_url=my_image_url
+        )
 
     async def search(
         self,
@@ -175,6 +175,23 @@ class Saucerer:
         databases: list[int] = None,
         hidden: bool = True,
     ) -> SearchResult:
+        """
+        Search the image for the image sauces.
+
+        Args:
+            image: The image to search for sauces, can be a url, a path or any IO objects
+            databases: The database ids to whitelist (default is `None`)
+            hidden: Show image with low similarity (default is `True`)
+
+        Returns:
+            A `SearchResult` object containing the search result, which then can be converted
+            to a dict by using `as_dict()`
+
+        Raises:
+            UploadError: Error occurred while uploading the image
+            SauceNAOError: Server error
+            ParseError: The module couldn't parse the result text
+        """
         params = {}
         await self.init()
         if isinstance(image, io.BufferedIOBase):

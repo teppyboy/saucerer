@@ -17,6 +17,6 @@ class ParseError(SaucererError):
 
 
 class SauceNAOError(SaucererError):
-    """Error raised by server"""
+    """Error raised by SauceNAO server"""
 
     pass
