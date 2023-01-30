@@ -5,6 +5,7 @@ class Author:
         name: A string containing the author name
         url: A string containing the author url in the sauce website
     """
+
     def __init__(self, name: str, url: str):
         self._name = name
         self._url = url
@@ -31,10 +32,11 @@ class Illustration:
     Attributes:
         name: A string containing the illust name
         url: A string containing the url to the illust
-        id: A string or an integer containing the illust id in the sauce website 
+        id: A string or an integer containing the illust id in the sauce website
         author: An `Author` class containing the author information
         artist: Alias for `author`
     """
+
     def __init__(
         self, name: str, url: str, sauce_id: int | str, user_name: str, user_url: str
     ):
@@ -80,6 +82,7 @@ class MiscInfo:
         provider: A string containing the image provider
         url: A string containing the url to the image
     """
+
     def __init__(self, provider: str, url: str) -> None:
         self._provider = provider
         self._url = url
@@ -103,6 +106,7 @@ class Sauce:
     Attributes:
         TODO
     """
+
     def __init__(
         self,
         hidden: bool,
@@ -175,6 +179,7 @@ class RetryLink:
         title: A string containing the search provider
         url: A string containing the url to the image search result
     """
+
     def __init__(self, title: str, url: str):
         self._title = title
         self._url = url
