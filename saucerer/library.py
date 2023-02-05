@@ -29,6 +29,8 @@ class Saucerer:
         await self.close()
 
     async def init(self) -> None:
+        """Initialize Saucerer
+        """
         if self._session:
             return
         self._session = aiohttp.ClientSession()
@@ -136,7 +138,7 @@ class Saucerer:
         html = BeautifulSoup(search, "html.parser")
         sauces = []
         if self._decode(html.find("title")) == "SauceNAO Error":
-            raise SauceNAOError(html.find("body").text)
+            raise SauceNAOError(html.find("body").text.strip())
         my_image_url: str = "https://saucenao.com" + self._get(
             html.find(id="yourimage", recursive=True).contents[0].contents[0], "src"
         )
@@ -169,6 +171,25 @@ class Saucerer:
             sauces=sauces, retry_links=retry_links, my_image_url=my_image_url
         )
 
+    @staticmethod
+    def _get_params(image, databases):
+        params = {}
+        if isinstance(image, io.BufferedIOBase):
+            params.update({"file": image.read()})
+        elif isinstance(image, io.TextIOBase):
+            params.update({"url": image.read(), "file": None})
+        elif _validate_url(image):
+            params.update({"url": image, "file": None})
+        elif isinstance(image, PathLike):
+            file = Path(image)
+            params.update({"file": file.read_bytes()})
+
+        if databases:
+            for db in databases:
+                params.update({"dbs[]", (None, db)})
+
+        return params
+
     async def search(
         self,
         image: PathLike | str | io.BufferedIOBase | io.TextIOBase | io.BytesIO,
@@ -192,21 +213,8 @@ class Saucerer:
             SauceNAOError: Server error
             ParseError: The module couldn't parse the result text
         """
-        params = {}
         await self.init()
-        if isinstance(image, io.BufferedIOBase):
-            params.update({"file": image.read()})
-        elif isinstance(image, io.TextIOBase):
-            params.update({"url": image.read(), "file": None})
-        elif _validate_url(image):
-            params.update({"url": image, "file": None})
-        elif isinstance(image, PathLike):
-            file = Path(image)
-            params.update({"file": file.read_bytes()})
-
-        if databases:
-            for db in databases:
-                params.update({"dbs[]", (None, db)})
+        params = self._get_params(image=image, databases=databases)
         try:
             rsp = await self._session.post(
                 "https://saucenao.com/search.php",
