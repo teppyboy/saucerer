@@ -53,6 +53,8 @@ class Saucerer:
         return obj.get(text)
 
     def _decode(self, obj) -> str:
+        if obj is None:
+            return
         if isinstance(obj, element.NavigableString):
             return obj.get_text()
         return obj.decode_contents()
@@ -139,7 +141,7 @@ class Saucerer:
     def _parse(self, search: str, hidden: bool = True) -> SearchResult:
         html = BeautifulSoup(search, "html.parser")
         sauces = []
-        if self._decode(html.find("title")) == "SauceNAO Error":
+        if self._decode(html.find("head").find("title")) == "SauceNAO Error":
             raise SauceNAOError(html.find("body").text.strip())
         my_image_url: str = "https://saucenao.com" + self._get(
             html.find(id="yourimage", recursive=True).contents[0].contents[0], "src"
@@ -182,7 +184,7 @@ class Saucerer:
             params.update({"url": image.read(), "file": None})
         elif _validate_url(image):
             params.update({"url": image, "file": None})
-        elif isinstance(image, PathLike):
+        else:
             file = Path(image)
             params.update({"file": file.read_bytes()})
 
