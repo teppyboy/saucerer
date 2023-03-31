@@ -32,8 +32,8 @@ class SaucererSync:
             hidden: Show image with low similarity (default is `True`)
 
         Returns:
-            A `SearchResult` object containing the search result, which then can be converted
-            to a dict by using `as_dict()`
+            A `SearchResult` object containing the search result, which then can be 
+            converted to a dict by using `as_dict()`
 
         Raises:
             UploadError: Error occurred while uploading the image
