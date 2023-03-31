@@ -5,9 +5,9 @@ from logging import Logger
 from urllib.parse import urlparse
 from os import PathLike, getenv
 from pathlib import Path
-from .constants import *
+from .constants import *  # noqa: F403
 from .classes import MiscInfo, RetryLink, Sauce, SearchResult
-from .exceptions import *
+from .exceptions import SauceNAOError, UploadError, ParseError
 from bs4 import BeautifulSoup, element
 
 
@@ -34,7 +34,7 @@ class Saucerer:
         if self._session:
             return
         self._session = aiohttp.ClientSession()
-        self._session.headers.update(HEADERS)
+        self._session.headers.update(HEADERS)  # noqa: F405
 
     async def close(self) -> None:
         if not self._session:
@@ -100,24 +100,26 @@ class Saucerer:
         image_url = image.get("src")
         if image_url == "images/static/blocked.gif":
             image_url = image.get("data-src")
-        for element in sauce_info.find(class_="resulttitle").children:
-            prev = self._prev_element(element)
-            if any(x in self._decode(prev) for x in ["Member", "Creator", "Author"]):
-                user_name = self._decode(element)
-            elif self._decode(prev) != user_name:
-                image_title = self._decode(prev)
+        title = sauce_info.find(class_="resulttitle")
+        if title is not None:
+            for elm in title.children:
+                prev = self._prev_element(elm)
+                if any(x in self._decode(prev) for x in ["Member", "Creator", "Author"]):
+                    user_name = self._decode(elm)
+                elif self._decode(prev) != user_name:
+                    image_title = self._decode(prev)
         match_info = html.find(class_="resultmatchinfo")
         match_percentage = (
             float(self._decode(match_info.find(class_="resultsimilarityinfo"))[:-1])
             / 100
         )
         misc_info = []
-        for element in match_info.find(class_="resultmiscinfo").children:
-            prev = self._prev_element(element)
-            if not element.get("href"):
+        for elm in match_info.find(class_="resultmiscinfo").children:
+            prev = self._prev_element(elm)
+            if not elm.get("href"):
                 continue
-            url = element.get("href")
-            provider = element.contents[0].get("src").split("/")[-1][:-4]
+            url = elm.get("href")
+            provider = elm.contents[0].get("src").split("/")[-1][:-4]
             misc_info.append(MiscInfo(provider=provider, url=url))
 
         return Sauce(
@@ -224,7 +226,7 @@ class Saucerer:
             raise UploadError(e)
         try:
             return self._parse(await rsp.text(), hidden=hidden)
-        except SauceNAOError as e:
+        except SauceNAOError:
             raise
         except Exception as e:
             raise ParseError(e)
